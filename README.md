@@ -35,8 +35,8 @@ Ensure the following dependencies are installed on your system:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-repo/error-mask.git
-    cd error-mask
+   [git clone https://github.com/sisuadami101/Android_Hacking.git]
+    cd Android_Hacking
     ```
 
 2. Make the script executable:
