@@ -1,5 +1,8 @@
 SSSSSS  OOOOO  JJJJJ  III  BBBBB  
-SS      O   O      J   I   B    B   SSSSSS  O   O      J   I   BBBBB        SS  O   O      J   I   B    B   SSSSSS  OOOOO  JJJJJ  III  BBBBB
+SS      O   O      J   I   B    B 
+SSSSSS  O   O      J   I   BBBBB  
+    SS  O   O      J   I   B    B   
+SSSSSS  OOOOO  JJJJJ  III  BBBBB
 
 
 # ERROR MASK - Advanced Android Exploitation Framework
