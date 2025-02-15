@@ -1,6 +1,4 @@
 
-
-
 # ERROR MASK - Advanced Android Exploitation Framework
 
 ### Version: 3.0
@@ -43,7 +41,7 @@ Ensure the following dependencies are installed on your system:
 
 2. Make the script executable:
     ```bash
-    chmod +x advanced_error_mask.sh
+    chmod +x an-hack.sh
     ```
 
 3. Install the required dependencies:
@@ -55,7 +53,7 @@ Ensure the following dependencies are installed on your system:
 
 Run the script with the following command:
 ```bash
-./advanced_error_mask.sh
+./an-hack.sh
 ```
 
 ### Main Menu Options
