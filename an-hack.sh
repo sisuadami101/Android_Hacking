@@ -2,7 +2,7 @@
 
 ###===============================================
 ###==        ERROR MASK - HACKING TOOL         ==
-###==        Coded by BlackHAT (Optimized)     ==
+###==        Coded By GRAY HAT (SojiB)     ==
 ###==             Enhanced Version             ==
 ###===============================================
 
