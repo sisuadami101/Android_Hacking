@@ -35,7 +35,8 @@ Ensure the following dependencies are installed on your system:
 
 1. Clone the repository:
     ```bash
-   [git clone https://github.com/sisuadami101/Android_Hacking.git]
+   git clone https://github.com/sisuadami101/Android_Hacking.git
+    
     cd Android_Hacking
     ```
 
